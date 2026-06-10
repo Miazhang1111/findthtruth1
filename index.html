@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>真相哨兵 · 新闻真伪挑战（随机顺序版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, 'Segoe UI', 'Roboto', 'PingFang SC', '微软雅黑', sans-serif;
+        }
+
+        body {
+            background: #eef2f5;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            max-width: 880px;
+            width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .game-header {
+            background: #1e2f2f;
+            color: #f4ede4;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .game-title h2 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            letter-spacing: -0.3px;
+        }
+        .game-title p {
+            font-size: 0.7rem;
+            opacity: 0.75;
+        }
+        .stats {
+            background: #2b4343;
+            padding: 0.4rem 1rem;
+            border-radius: 60px;
+            font-weight: 600;
+            display: flex;
+            gap: 1.2rem;
+        }
+        .stats span {
+            font-size: 1rem;
+        }
+        .score-box, .progress-box {
+            background: #00000030;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+        }
+
+        .news-card {
+            padding: 1.8rem 2rem 1.5rem;
+            transition: all 0.2s;
+        }
+        .news-img {
+            width: 100%;
+            height: 220px;
+            background: #d9cfbc;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .news-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .img-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #ccc3b2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #5f5340;
+            font-size: 0.85rem;
+            text-align: center;
+            flex-direction: column;
+            background-image: radial-gradient(circle at 10% 30%, #ddd0bc 2%, transparent 2.5%);
+            background-size: 20px 20px;
+        }
+        .news-category-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            background: #eae2d4;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            margin-bottom: 0.8rem;
+            color: #7d5d42;
+            font-weight: 600;
+        }
+        .news-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 0.75rem;
+            color: #1f2e2a;
+        }
+        .news-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #7a6a58;
+            border-bottom: 1px solid #ece2d6;
+            padding-bottom: 0.7rem;
+            margin-bottom: 1rem;
+        }
+        .news-content {
+            background: #fefaf5;
+            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            color: #2c3e3a;
+            line-height: 1.55;
+            font-size: 0.95rem;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-bottom: 1.2rem;
+            border: 1px solid #f1e7dd;
+        }
+        .judge-buttons {
+            display: flex;
+            gap: 1.2rem;
+            margin-top: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .btn-judge {
+            flex: 1;
+            padding: 0.9rem 0;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f0ede8;
+            color: #2f423e;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-real {
+            background: #26664e;
+            color: white;
+            border-bottom: 3px solid #104d39;
+        }
+        .btn-real:hover {
+            background: #1f553f;
+            transform: scale(0.98);
+        }
+        .btn-fake {
+            background: #b6452c;
+            color: white;
+            border-bottom: 3px solid #8d3320;
+        }
+        .btn-fake:hover {
+            background: #a03b25;
+            transform: scale(0.98);
+        }
+        .btn-judge:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .reset-btn {
+            background: #e5dfd3;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #4e3f2f;
+            margin-top: 0.5rem;
+            width: 100%;
+        }
+        .reset-btn:hover {
+            background: #d6cdbc;
+        }
+        .feedback-toast {
+            text-align: center;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-weight: 500;
+            color: #26664e;
+            min-height: 32px;
+        }
+        footer {
+            background: #f6f3ef;
+            padding: 0.8rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #9a8b78;
+            border-top: 1px solid #e7dfd3;
+        }
+        @media (max-width: 600px) {
+            .game-container { border-radius: 1.5rem; }
+            .news-card { padding: 1.2rem; }
+            .news-title { font-size: 1.3rem; }
+            .news-img { height: 180px; }
+            .stats { font-size: 0.8rem; gap: 0.6rem; }
+            .btn-judge { font-size: 0.95rem; padding: 0.7rem; }
+        }
+        .modal-mask {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-panel {
+            background: #fffcf7;
+            max-width: 480px;
+            width: 85%;
+            border-radius: 2rem;
+            padding: 2rem 1.8rem;
+            text-align: center;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            animation: fadeUp 0.2s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .modal-panel h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #c96e3e;
+            margin: 0.5rem 0;
+        }
+        .tips-list {
+            text-align: left;
+            background: #f9f2e9;
+            padding: 1rem 1.4rem;
+            border-radius: 24px;
+            margin: 1.2rem 0;
+        }
+        .tips-list li {
+            margin-bottom: 0.6rem;
+            font-size: 0.9rem;
+        }
+        .close-modal-btn {
+            background: #26664e;
+            border: none;
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameApp">
+    <div class="game-header">
+        <div class="game-title">
+            <h2>🔍 真相哨兵 · 新闻甄别挑战</h2>
+            <p>随机顺序 | 点击真/假，测测你的新闻辨别力</p>
+        </div>
+        <div class="stats">
+            <div class="score-box">🏆 得分: <span id="scoreDisplay">0</span></div>
+            <div class="progress-box">📰 进度: <span id="progressDisplay">0</span> / <span id="totalCount">10</span></div>
+        </div>
+    </div>
+
+    <div class="news-card" id="newsCard">
+        <div class="news-img" id="newsImgContainer"></div>
+        <div class="news-category-tag" id="newsTypeTag">社会·现场</div>
+        <div class="news-title" id="newsTitle"></div>
+        <div class="news-meta" id="newsMeta"></div>
+        <div class="news-content" id="newsContent"></div>
+        <div class="judge-buttons">
+            <button class="btn-judge btn-real" id="realBtn">✅ 真新闻</button>
+            <button class="btn-judge btn-fake" id="fakeBtn">⚠️ 假新闻</button>
+        </div>
+        <button class="reset-btn" id="resetGameBtn">🔄 重新挑战（随机重置）</button>
+        <div class="feedback-toast" id="feedbackMsg"></div>
+    </div>
+    <footer>⚡ 顺序随机 | 独立思考，不信谣不传谣</footer>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 新闻数据（6真4假）—— 已修正图片链接，确保纯 URL 字符串
+    // --------------------------------------------------------------
+    const RAW_NEWS = [
+        // 真实新闻 1
+        {
+            id: 0,
+            title: "湖北黄石84岁老人街头三次摔倒，热心市民接力帮扶送回家",
+            date: "2026年5月11日",
+            location: "湖北省黄石市城区沿街人行道",
+            content: "84岁独居老人独自出门，因体力不支先后三次摔倒在人行道。第一轮路过年轻女孩上前搀扶；第二次两名路人搀扶至墙边休息；第三次一名过路男子帮扶后拨打报警电话。民警抵达核实住址，平安将老人护送回家。全程多位市民主动伸出援手，相关监控被央视新闻收录播报，成为城市暖心文明案例。",
+            imgSrc: "https://i.ibb.co/dsRGDwV4/image.png",
+            isReal: true
+        },
+        // 真实新闻 2
+        {
+            id: 1,
+            title: "广东东莞邻居悬空托举被困孩童半小时，消防破门成功救人",
+            date: "2026年1月12日",
+            location: "广东省东莞市塘厦镇四黎南路居民公寓",
+            content: "一名幼童玩耍时头部卡在三楼空调外机缝隙，身体悬空吊挂在外。二楼住户林进得翻越窗边，徒手托举孩子近30分钟，同时其他邻居联系家长、拨打119。消防人员到场拆除空调外机拓宽空间，众人配合顺利救下孩童，孩子身体无外伤，事后孩子家属登门致谢施救邻居。",
+            imgSrc: "https://i.ibb.co/n8167BRq/image.png",
+            isReal: true
+        },
+        // 真实新闻 3
+        {
+            id: 2,
+            title: "云南大理游客驾车误坠洱海，岸边群众合力落水救人",
+            date: "2025年11月30日",
+            location: "云南省大理市洱海生态廊道沿岸",
+            content: "三名游客租赁四轮观光车，因操作失误车辆冲入洱海。廊道两名保洁工作人员率先跳水施救，周边散步游客、水草打捞工人陆续下水帮忙。众人分工拖拽，短时间内将三名落水人员全部转移上岸，伤者送医检查均无大碍。",
+            imgSrc: "https://i.ibb.co/wZk3zpz3/image.png",
+            isReal: true
+        },
+        // 真实新闻 4
+        {
+            id: 3,
+            title: "杭州萧山男子多次破坏共享单车二维码与车锁被处罚",
+            date: "2022年3月24日",
+            location: "浙江省杭州市萧山区",
+            content: "哈啰单车运维人员巡查发现，萧山区多辆共享单车二维码被刮花、智能锁遭破坏。经蹲守排查，锁定一名男子。该男子为方便自己免费骑行，连续多日故意损坏单车部件。警方介入后，男子承认违法事实，赔偿平台损失并写下保证书，公安机关依法对其作出行政处罚。",
+            imgSrc: "https://i.ibb.co/B56Z5qkt/image.png",
+            isReal: true
+        },
+        // 真实新闻 5 (气象)
+        {
+            id: 4,
+            title: "2025年6月贵州榕江遭遇持续性暴雨，县城全域大面积积水内涝",
+            date: "2025年6月25日",
+            location: "贵州省黔东南州榕江县城区",
+            content: "受南方持续季风降雨影响，榕江县连日普降大暴雨，单日累计降雨量突破历史同期极值。县城主干道、运动场、居民区被洪水浸泡，多台私家车浸泡在积水中，部分临街低层房屋进水。当地应急、消防紧急出动，连夜转移低洼地带群众上千人，农田、市政设施出现不同程度损毁。",
+            imgSrc: "https://i.ibb.co/Q7FyFv12/image.png",
+            isReal: true
+        },
+        // 真实新闻 6 (气象)
+        {
+            id: 5,
+            title: "2026年5月印度北部遭遇极端高温，多地气温突破 50℃致民生受灾",
+            date: "2026年6月3日",
+            location: "印度北方邦、新德里等北部平原区域",
+            content: "受大气环流异常影响，印度北部自4月末起连续遭遇极端热浪，多地日间气温超45℃，北方邦局部最高温突破50℃。高温引发大范围断电缺水，田间作物受旱减产，当地民众依靠露天水管取水降温。医疗数据显示极端高温造成大量超额死亡。",
+            imgSrc: "https://i.ibb.co/yGGJ5gN/image.png",
+            isReal: true
+        },
+        // 虚假新闻 1 (社会)
+        {
+            id: 6,
+            title: "河南叶县一醉汉持椅殴打男童致其重伤",
+            date: "2025年7月6日",
+            location: "河南省平顶山叶县",
+            content: "7月6日晚，河南平顶山叶县街头，一名8岁男童骑车途经某火锅店时，被一名醉酒男子挥舞塑料椅直击头部，致颅骨粉碎性骨折、颅内大量出血，紧急送医后被判定需立即开颅手术，目前伤人者已被刑拘，男童母亲表示不接受伤人者任何道歉。",
+            imgSrc: "https://i.ibb.co/MxYjxvQs/image.png",
+            isReal: false
+        },
+        // 虚假新闻 2 (社会) —— 已修正错误的链接
+        {
+            id: 7,
+            title: "北京一男子为救路边小女孩被车撞伤，司机逃逸",
+            date: "2025年3月7日",
+            location: "北京通州区某小区附近",
+            content: "北京通州一名男子看到小女孩在路边玩耍即将被车撞到，他奋不顾身上前推开孩子，自己被汽车撞倒，男子被撞到后昏迷被送往医院，肇事司机当场逃逸。后续女孩家属提供2000元供男子救治，目前救人者在重症监护室昏迷中。",
+            imgSrc: "https://i.ibb.co/pmdBnDj/image.png",
+            isReal: false
+        },
+        // 虚假新闻 3 (气象)
+        {
+            id: 8,
+            title: "湖北长阳山洪暴发，夫妻被卷走、搜救72小时仍缺一人",
+            date: "2026年5月31日",
+            location: "湖北宜昌长阳县峡谷地带",
+            content: "湖北长阳山区突降暴雨，引发巨大山洪，一对夫妻在峡谷游玩时被洪水卷走，两人下落不明。后救援队伍在暴雨中连续搜救72小时，仅找到一人，另一人仍失踪，情况危急。",
+            imgSrc: "https://i.ibb.co/7dWnjchC/image.png",
+            isReal: false
+        },
+        // 虚假新闻 4 (气象)
+        {
+            id: 9,
+            title: "山东菏泽突降碗口大冰雹，果园损失惨重",
+            date: "2025年7月28日",
+            location: "山东菏泽成武县",
+            content: "菏泽成武县遭遇强对流天气，降下'碗口大'冰雹，密集冰雹砸落，车辆玻璃碎裂、车身坑洼，郊外果园损失最惨重：苹果、梨、桃树枝条断裂，果实被砸落一地，叶片千疮百孔；西瓜、辣椒、大蒜等经济作物被砸烂，大面积农田绝收，农户蹲在田埂痛哭，直言 '一年收成全毁'。",
+            imgSrc: "https://i.ibb.co/S4hNfK4q/image.png",
+            isReal: false
+        }
+    ];
+
+    // ---------- 全局变量 ----------
+    let shuffledNews = [];
+    let currentIndex = 0;
+    let currentScore = 0;
+    let gameActive = true;
+    let waitingForNext = false;
+    let timeoutId = null;
+
+    // DOM 元素
+    const scoreSpan = document.getElementById('scoreDisplay');
+    const progressSpan = document.getElementById('progressDisplay');
+    const totalSpan = document.getElementById('totalCount');
+    const newsImgContainer = document.getElementById('newsImgContainer');
+    const newsTypeTag = document.getElementById('newsTypeTag');
+    const newsTitleEl = document.getElementById('newsTitle');
+    const newsMetaEl = document.getElementById('newsMeta');
+    const newsContentEl = document.getElementById('newsContent');
+    const realBtn = document.getElementById('realBtn');
+    const fakeBtn = document.getElementById('fakeBtn');
+    const resetBtn = document.getElementById('resetGameBtn');
+    const feedbackDiv = document.getElementById('feedbackMsg');
+
+    const TOTAL = RAW_NEWS.length;
+    totalSpan.textContent = TOTAL;
+
+    function shuffleArray(arr) {
+        const array = [...arr];
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function resetGameState() {
+        if (timeoutId) clearTimeout(timeoutId);
+        shuffledNews = shuffleArray(RAW_NEWS);
+        currentIndex = 0;
+        currentScore = 0;
+        gameActive = true;
+        waitingForNext = false;
+        updateUI();
+        renderCurrentNews();
+        realBtn.disabled = false;
+        fakeBtn.disabled = false;
+        feedbackDiv.textContent = '✨ 新闻顺序已随机打乱，开始挑战吧！';
+        setTimeout(() => {
+            if (feedbackDiv.textContent === '✨ 新闻顺序已随机打乱，开始挑战吧！') feedbackDiv.textContent = '';
+        }, 2000);
+    }
+
+    function updateUI() {
+        scoreSpan.textContent = currentScore;
+        progressSpan.textContent = `${currentIndex + 1}`;
+    }
+
+    function handleImageError(imgElement, altText) {
+        imgElement.onerror = null;
+        const parent = imgElement.parentNode;
+        const placeholderDiv = document.createElement('div');
+        placeholderDiv.className = 'img-placeholder';
+        placeholderDiv.innerHTML = `📸 新闻配图<br><span style="font-size:12px;">${altText || '模拟影像'}</span>`;
+        parent.innerHTML = '';
+        parent.appendChild(placeholderDiv);
+    }
+
+    function renderCurrentNews() {
+        if (!gameActive && currentIndex >= TOTAL) return;
+        const news = shuffledNews[currentIndex];
+        if (!news) return;
+
+        newsTitleEl.textContent = news.title;
+        newsMetaEl.innerHTML = `<span>📅 ${news.date}</span> <span>📍 ${news.location}</span>`;
+        newsContentEl.textContent = news.content;
+        // 隐藏真假标签
+        newsTypeTag.style.display = 'none';
+
+        newsImgContainer.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = news.imgSrc;
+        img.alt = `新闻配图: ${news.title}`;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.onerror = () => handleImageError(img, news.title);
+        newsImgContainer.appendChild(img);
+    }
+
+    function showFeedback(isCorrect, isRealNews) {
+        if (isCorrect) {
+            feedbackDiv.innerHTML = '✅ 判断正确！ +1分  ' + (isRealNews ? '这是真新闻 ✓' : '这是假新闻 ✓');
+            feedbackDiv.style.color = '#26664e';
+        } else {
+            const truthLabel = isRealNews ? '真实新闻' : '虚假新闻';
+            feedbackDiv.innerHTML = `❌ 判断失误！ 本条其实是${truthLabel}，再接再厉。 0分`;
+            feedbackDiv.style.color = '#b6452c';
+        }
+        setTimeout(() => {
+            if (feedbackDiv.innerHTML.includes('判断') || feedbackDiv.innerHTML.includes('失误')) 
+                feedbackDiv.innerHTML = '';
+        }, 1800);
+    }
+
+    function endGame() {
+        gameActive = false;
+        realBtn.disabled = true;
+        fakeBtn.disabled = true;
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        const tips = [
+            "🔍 1. 交叉验证：对比多家权威媒体或官方通报，假新闻常缺乏第二信源。",
+            "📊 2. 警惕极端情绪：夸大伤亡、骇人标题、煽动性语言往往是虚假新闻的特征。",
+            "🧠 3. 查证原始出处：假新闻常盗用旧图或视频，使用反向图片搜索可辨真伪。"
+        ];
+        
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal-mask';
+        modalDiv.innerHTML = `
+            <div class="modal-panel">
+                <h3>🏁 游戏通关</h3>
+                <div class="final-score">${currentScore} / ${TOTAL}</div>
+                <p>你的新闻辨别力指数：${currentScore === TOTAL ? '🌟 火眼金睛！' : (currentScore >= 7 ? '📰 具备一定分辨能力，继续提升' : '🤔 谨慎阅读，多练习辨伪')}</p>
+                <div class="tips-list">
+                    <ul style="list-style-type: none; padding-left: 0;">
+                        ${tips.map(t => `<li>${t}</li>`).join('')}
+                    </ul>
+                </div>
+                <button class="close-modal-btn" id="modalCloseBtn">重新挑战</button>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        const closeBtn = document.getElementById('modalCloseBtn');
+        closeBtn.addEventListener('click', () => {
+            modalDiv.remove();
+            resetGameState();
+        });
+        modalDiv.addEventListener('click', (e) => {
+            if (e.target === modalDiv) {
+                modalDiv.remove();
+                resetGameState();
+            }
+        });
+    }
+
+    function handleJudge(guessIsReal) {
+        if (!gameActive) {
+            feedbackDiv.innerHTML = '⛔ 游戏已经结束，点击“重新挑战”继续吧';
+            return;
+        }
+        if (waitingForNext) {
+            feedbackDiv.innerHTML = '⏳ 请稍后，正在跳转下一篇...';
+            return;
+        }
+        if (currentIndex >= TOTAL) {
+            endGame();
+            return;
+        }
+        
+        const currentNews = shuffledNews[currentIndex];
+        const isActuallyReal = currentNews.isReal;
+        let correct = false;
+        if (guessIsReal === isActuallyReal) {
+            currentScore++;
+            correct = true;
+        }
+        updateUI();
+        showFeedback(correct, isActuallyReal);
+        
+        const isLast = (currentIndex + 1 === TOTAL);
+        waitingForNext = true;
+        realBtn.disabled = true;
+        fakeBtn.disabled = true;
+        
+        if (isLast) {
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                waitingForNext = false;
+                realBtn.disabled = true;
+                fakeBtn.disabled = true;
+                endGame();
+            }, 1200);
+            return;
+        }
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            currentIndex++;
+            renderCurrentNews();
+            updateUI();
+            waitingForNext = false;
+            if (gameActive && currentIndex < TOTAL) {
+                realBtn.disabled = false;
+                fakeBtn.disabled = false;
+            } else if (currentIndex >= TOTAL) {
+                endGame();
+            }
+            setTimeout(() => {
+                if (feedbackDiv.innerHTML !== '') feedbackDiv.innerHTML = '';
+            }, 500);
+        }, 1000);
+    }
+
+    realBtn.addEventListener('click', () => handleJudge(true));
+    fakeBtn.addEventListener('click', () => handleJudge(false));
+    resetBtn.addEventListener('click', () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        waitingForNext = false;
+        resetGameState();
+    });
+    
+    resetGameState();
+</script>
+</body>
+</html>
