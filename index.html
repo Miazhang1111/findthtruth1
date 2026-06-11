@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>真相哨兵 · 新闻真伪挑战（随机顺序版）</title>
+    <title>真相哨兵 · 新闻真伪挑战（增强辨识版）</title>
     <style>
         * {
             margin: 0;
@@ -21,10 +21,28 @@
             align-items: center;
         }
 
-        .game-container {
-            max-width: 880px;
+        /* 双栏布局：左侧游戏区，右侧技巧栏 */
+        .main-layout {
+            max-width: 1200px;
             width: 100%;
             margin: 0 auto;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .game-wrapper {
+            flex: 2;
+            min-width: 280px;
+        }
+
+        .tips-wrapper {
+            flex: 1;
+            min-width: 220px;
+            max-width: 280px;
+        }
+
+        .game-container {
             background: #ffffff;
             border-radius: 2rem;
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
@@ -141,7 +159,29 @@
             overflow-y: auto;
             margin-bottom: 1.2rem;
             border: 1px solid #f1e7dd;
+            transition: all 0.2s;
         }
+        /* 假新闻高亮样式 */
+        .fake-highlight {
+            background-color: rgba(255, 0, 0, 0.25);
+            border-radius: 6px;
+            padding: 0 2px;
+            font-weight: 500;
+            position: relative;
+            cursor: help;
+        }
+        .fake-reason {
+            display: block;
+            font-size: 0.75rem;
+            color: #c0392b;
+            background: #fff0ee;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+
         .judge-buttons {
             display: flex;
             gap: 1.2rem;
@@ -216,14 +256,69 @@
             color: #9a8b78;
             border-top: 1px solid #e7dfd3;
         }
-        @media (max-width: 600px) {
-            .game-container { border-radius: 1.5rem; }
-            .news-card { padding: 1.2rem; }
-            .news-title { font-size: 1.3rem; }
-            .news-img { height: 180px; }
-            .stats { font-size: 0.8rem; gap: 0.6rem; }
-            .btn-judge { font-size: 0.95rem; padding: 0.7rem; }
+
+        /* 右侧技巧栏样式 */
+        .tips-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: sticky;
+            top: 2rem;
         }
+        .tips-header {
+            background: #c4452c;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .tips-list {
+            padding: 1.2rem;
+            background: #fffefa;
+        }
+        .tips-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .tips-list li {
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            background: #fef5ef;
+            padding: 0.7rem;
+            border-radius: 16px;
+            color: #2f4b4b;
+            border-left: 4px solid #c4452c;
+        }
+        .tips-icon {
+            font-size: 1.1rem;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 780px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .tips-wrapper {
+                max-width: 100%;
+            }
+            .tips-card {
+                position: static;
+            }
+            .game-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .news-title {
+                font-size: 1.3rem;
+            }
+            .news-img {
+                height: 180px;
+            }
+        }
+
         .modal-mask {
             position: fixed;
             top:0; left:0; width:100%; height:100%;
@@ -258,16 +353,12 @@
             color: #c96e3e;
             margin: 0.5rem 0;
         }
-        .tips-list {
+        .tips-list-modal {
             text-align: left;
             background: #f9f2e9;
             padding: 1rem 1.4rem;
             border-radius: 24px;
             margin: 1.2rem 0;
-        }
-        .tips-list li {
-            margin-bottom: 0.6rem;
-            font-size: 0.9rem;
         }
         .close-modal-btn {
             background: #26664e;
@@ -281,38 +372,53 @@
     </style>
 </head>
 <body>
-<div class="game-container" id="gameApp">
-    <div class="game-header">
-        <div class="game-title">
-            <h2>🔍 真相哨兵 · 新闻甄别挑战</h2>
-            <p>随机顺序 | 点击真/假，测测你的新闻辨别力</p>
-        </div>
-        <div class="stats">
-            <div class="score-box">🏆 得分: <span id="scoreDisplay">0</span></div>
-            <div class="progress-box">📰 进度: <span id="progressDisplay">0</span> / <span id="totalCount">10</span></div>
+<div class="main-layout">
+    <!-- 左侧游戏主区域 -->
+    <div class="game-wrapper">
+        <div class="game-container" id="gameApp">
+            <div class="game-header">
+                <div class="game-title">
+                    <h2>🔍 真相哨兵 · 新闻甄别挑战</h2>
+                    <p>随机顺序 | 点击真/假，测测你的新闻辨别力</p>
+                </div>
+                <div class="stats">
+                    <div class="score-box">🏆 得分: <span id="scoreDisplay">0</span></div>
+                    <div class="progress-box">📰 进度: <span id="progressDisplay">0</span> / <span id="totalCount">10</span></div>
+                </div>
+            </div>
+
+            <div class="news-card" id="newsCard">
+                <div class="news-img" id="newsImgContainer"></div>
+                <div class="news-category-tag" id="newsTypeTag">社会·现场</div>
+                <div class="news-title" id="newsTitle"></div>
+                <div class="news-meta" id="newsMeta"></div>
+                <div class="news-content" id="newsContent"></div>
+                <div class="judge-buttons">
+                    <button class="btn-judge btn-real" id="realBtn">✅ 真新闻</button>
+                    <button class="btn-judge btn-fake" id="fakeBtn">⚠️ 假新闻</button>
+                </div>
+                <button class="reset-btn" id="resetGameBtn">🔄 重新挑战（随机重置）</button>
+                <div class="feedback-toast" id="feedbackMsg"></div>
+            </div>
+            <footer>⚡ 顺序随机 | 独立思考，不信谣不传谣</footer>
         </div>
     </div>
 
-    <div class="news-card" id="newsCard">
-        <div class="news-img" id="newsImgContainer"></div>
-        <div class="news-category-tag" id="newsTypeTag">社会·现场</div>
-        <div class="news-title" id="newsTitle"></div>
-        <div class="news-meta" id="newsMeta"></div>
-        <div class="news-content" id="newsContent"></div>
-        <div class="judge-buttons">
-            <button class="btn-judge btn-real" id="realBtn">✅ 真新闻</button>
-            <button class="btn-judge btn-fake" id="fakeBtn">⚠️ 假新闻</button>
+    <!-- 右侧辨识技巧栏 -->
+    <div class="tips-wrapper">
+        <div class="tips-card">
+            <div class="tips-header">💡 真伪新闻辨识小技巧</div>
+            <div class="tips-list" id="tipsListContainer">
+                <ul id="tipsUl">
+                    <li>🔍 正在加载技巧...</li>
+                </ul>
+            </div>
         </div>
-        <button class="reset-btn" id="resetGameBtn">🔄 重新挑战（随机重置）</button>
-        <div class="feedback-toast" id="feedbackMsg"></div>
     </div>
-    <footer>⚡ 顺序随机 | 独立思考，不信谣不传谣</footer>
 </div>
 
 <script>
-    // --------------------------------------------------------------
-    // 新闻数据（6真4假）—— 已修正图片链接，确保纯 URL 字符串
-    // --------------------------------------------------------------
+    // ---------- 1. 原始新闻数据（6真4假 + 虚假内容标注点）----------
     const RAW_NEWS = [
         // 真实新闻 1
         {
@@ -322,7 +428,8 @@
             location: "湖北省黄石市城区沿街人行道",
             content: "84岁独居老人独自出门，因体力不支先后三次摔倒在人行道。第一轮路过年轻女孩上前搀扶；第二次两名路人搀扶至墙边休息；第三次一名过路男子帮扶后拨打报警电话。民警抵达核实住址，平安将老人护送回家。全程多位市民主动伸出援手，相关监控被央视新闻收录播报，成为城市暖心文明案例。",
             imgSrc: "https://i.ibb.co/dsRGDwV4/image.png",
-            isReal: true
+            isReal: true,
+            fakeSpots: []   // 真新闻无虚假点
         },
         // 真实新闻 2
         {
@@ -331,8 +438,9 @@
             date: "2026年1月12日",
             location: "广东省东莞市塘厦镇四黎南路居民公寓",
             content: "一名幼童玩耍时头部卡在三楼空调外机缝隙，身体悬空吊挂在外。二楼住户林进得翻越窗边，徒手托举孩子近30分钟，同时其他邻居联系家长、拨打119。消防人员到场拆除空调外机拓宽空间，众人配合顺利救下孩童，孩子身体无外伤，事后孩子家属登门致谢施救邻居。",
-            imgSrc: "https://i.ibb.co/n8167BRq/image.png",
-            isReal: true
+            imgSrc: "https://i.ibb.co/Df8bS77H/image.png",
+            isReal: true,
+            fakeSpots: []
         },
         // 真实新闻 3
         {
@@ -342,7 +450,8 @@
             location: "云南省大理市洱海生态廊道沿岸",
             content: "三名游客租赁四轮观光车，因操作失误车辆冲入洱海。廊道两名保洁工作人员率先跳水施救，周边散步游客、水草打捞工人陆续下水帮忙。众人分工拖拽，短时间内将三名落水人员全部转移上岸，伤者送医检查均无大碍。",
             imgSrc: "https://i.ibb.co/wZk3zpz3/image.png",
-            isReal: true
+            isReal: true,
+            fakeSpots: []
         },
         // 真实新闻 4
         {
@@ -352,7 +461,8 @@
             location: "浙江省杭州市萧山区",
             content: "哈啰单车运维人员巡查发现，萧山区多辆共享单车二维码被刮花、智能锁遭破坏。经蹲守排查，锁定一名男子。该男子为方便自己免费骑行，连续多日故意损坏单车部件。警方介入后，男子承认违法事实，赔偿平台损失并写下保证书，公安机关依法对其作出行政处罚。",
             imgSrc: "https://i.ibb.co/B56Z5qkt/image.png",
-            isReal: true
+            isReal: true,
+            fakeSpots: []
         },
         // 真实新闻 5 (气象)
         {
@@ -361,8 +471,9 @@
             date: "2025年6月25日",
             location: "贵州省黔东南州榕江县城区",
             content: "受南方持续季风降雨影响，榕江县连日普降大暴雨，单日累计降雨量突破历史同期极值。县城主干道、运动场、居民区被洪水浸泡，多台私家车浸泡在积水中，部分临街低层房屋进水。当地应急、消防紧急出动，连夜转移低洼地带群众上千人，农田、市政设施出现不同程度损毁。",
-            imgSrc: "https://i.ibb.co/Q7FyFv12/image.png",
-            isReal: true
+            imgSrc: "https://i.ibb.co/ym9tdtV5/image.png",
+            isReal: true,
+            fakeSpots: []
         },
         // 真实新闻 6 (气象)
         {
@@ -372,9 +483,10 @@
             location: "印度北方邦、新德里等北部平原区域",
             content: "受大气环流异常影响，印度北部自4月末起连续遭遇极端热浪，多地日间气温超45℃，北方邦局部最高温突破50℃。高温引发大范围断电缺水，田间作物受旱减产，当地民众依靠露天水管取水降温。医疗数据显示极端高温造成大量超额死亡。",
             imgSrc: "https://i.ibb.co/yGGJ5gN/image.png",
-            isReal: true
+            isReal: true,
+            fakeSpots: []
         },
-        // 虚假新闻 1 (社会)
+        // 虚假新闻 1 (社会) + 标注点
         {
             id: 6,
             title: "河南叶县一醉汉持椅殴打男童致其重伤",
@@ -382,19 +494,25 @@
             location: "河南省平顶山叶县",
             content: "7月6日晚，河南平顶山叶县街头，一名8岁男童骑车途经某火锅店时，被一名醉酒男子挥舞塑料椅直击头部，致颅骨粉碎性骨折、颅内大量出血，紧急送医后被判定需立即开颅手术，目前伤人者已被刑拘，男童母亲表示不接受伤人者任何道歉。",
             imgSrc: "https://i.ibb.co/MxYjxvQs/image.png",
-            isReal: false
+            isReal: false,
+            fakeSpots: [
+                { text: "致颅骨粉碎性骨折、颅内大量出血，紧急送医后被判定需立即开颅手术", reason: "官方通报及权威媒体均未提及如此严重的颅骨粉碎性骨折和开颅手术，描述属于夸大编造。" }
+            ]
         },
-        // 虚假新闻 2 (社会) —— 已修正错误的链接
+        // 虚假新闻 2 (社会) + 标注点
         {
             id: 7,
             title: "北京一男子为救路边小女孩被车撞伤，司机逃逸",
             date: "2025年3月7日",
             location: "北京通州区某小区附近",
             content: "北京通州一名男子看到小女孩在路边玩耍即将被车撞到，他奋不顾身上前推开孩子，自己被汽车撞倒，男子被撞到后昏迷被送往医院，肇事司机当场逃逸。后续女孩家属提供2000元供男子救治，目前救人者在重症监护室昏迷中。",
-            imgSrc: "https://i.ibb.co/pmdBnDj/image.png",
-            isReal: false
+            imgSrc: "https://i.ibb.co/7LKCyzJ/image.png",
+            isReal: false,
+            fakeSpots: [
+                { text: "目前救人者在重症监护室昏迷中", reason: "该事件无任何正规媒体报道，后续救治情况为虚构编造，真实情况无法核实。" }
+            ]
         },
-        // 虚假新闻 3 (气象)
+        // 虚假新闻 3 (气象) + 标注点
         {
             id: 8,
             title: "湖北长阳山洪暴发，夫妻被卷走、搜救72小时仍缺一人",
@@ -402,9 +520,12 @@
             location: "湖北宜昌长阳县峡谷地带",
             content: "湖北长阳山区突降暴雨，引发巨大山洪，一对夫妻在峡谷游玩时被洪水卷走，两人下落不明。后救援队伍在暴雨中连续搜救72小时，仅找到一人，另一人仍失踪，情况危急。",
             imgSrc: "https://i.ibb.co/7dWnjchC/image.png",
-            isReal: false
+            isReal: false,
+            fakeSpots: [
+                { text: "另一人仍失踪", reason: "当地防汛办及官方并未发布“一人失踪”的消息，此细节为虚假捏造。" }
+            ]
         },
-        // 虚假新闻 4 (气象)
+        // 虚假新闻 4 (气象) + 标注点
         {
             id: 9,
             title: "山东菏泽突降碗口大冰雹，果园损失惨重",
@@ -412,11 +533,47 @@
             location: "山东菏泽成武县",
             content: "菏泽成武县遭遇强对流天气，降下'碗口大'冰雹，密集冰雹砸落，车辆玻璃碎裂、车身坑洼，郊外果园损失最惨重：苹果、梨、桃树枝条断裂，果实被砸落一地，叶片千疮百孔；西瓜、辣椒、大蒜等经济作物被砸烂，大面积农田绝收，农户蹲在田埂痛哭，直言 '一年收成全毁'。",
             imgSrc: "https://i.ibb.co/S4hNfK4q/image.png",
-            isReal: false
+            isReal: false,
+            fakeSpots: [
+                { text: "碗口大", reason: "气象记录中山东菏泽从未出现过碗口大的冰雹，此表述严重夸张，不符事实。" },
+                { text: "一年收成全毁", reason: "实际受灾范围有限，绝收表述不实，属煽动性虚假信息。" }
+            ]
         }
     ];
 
-    // ---------- 全局变量 ----------
+    // 10条辨识技巧库
+    const TIPS_LIBRARY = [
+        "🔍 交叉验证：对比多家权威媒体或官方通报，假新闻常缺乏第二信源。",
+        "📊 警惕极端情绪：夸大伤亡、骇人标题、煽动性语言往往是虚假新闻的特征。",
+        "🧠 查证原始出处：假新闻常盗用旧图或视频，使用反向图片搜索可辨真伪。",
+        "⏱️ 注意发布时间：旧闻新炒经常被利用，检查事件时间是否合理。",
+        "🏛️ 核实信源身份：非认证账号、自媒体“爆料”可信度低，让子弹飞一会。",
+        "📸 图片反搜：保存图片到搜索引擎识图，可能发现被多次篡改。",
+        "📝 逻辑检验：极端天气数据是否匹配当地气候记录？过于离奇必有妖。",
+        "🗣️ 当事人缺席：假新闻往往没有具体人物、部门可核实，只有模糊叙述。",
+        "🌐 跨平台比对：微博、抖音、正规新闻网站对照，若只有零星传播则可疑。",
+        "🧾 官方回应：重大灾害或事故，官方一定会发布通报，无通报则存疑。"
+    ];
+
+    // 随机抽取3条不同的技巧
+    function getRandomTips(count = 3) {
+        const shuffled = [...TIPS_LIBRARY];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled.slice(0, count);
+    }
+
+    // 更新右侧技巧栏
+    function updateTipsSidebar() {
+        const tipsUl = document.getElementById('tipsUl');
+        if (!tipsUl) return;
+        const selectedTips = getRandomTips(3);
+        tipsUl.innerHTML = selectedTips.map(tip => `<li>${tip}</li>`).join('');
+    }
+
+    // ---------- 游戏全局变量 ----------
     let shuffledNews = [];
     let currentIndex = 0;
     let currentScore = 0;
@@ -450,6 +607,7 @@
         return array;
     }
 
+    // 重置游戏状态
     function resetGameState() {
         if (timeoutId) clearTimeout(timeoutId);
         shuffledNews = shuffleArray(RAW_NEWS);
@@ -462,6 +620,7 @@
         realBtn.disabled = false;
         fakeBtn.disabled = false;
         feedbackDiv.textContent = '✨ 新闻顺序已随机打乱，开始挑战吧！';
+        updateTipsSidebar();  // 刷新技巧
         setTimeout(() => {
             if (feedbackDiv.textContent === '✨ 新闻顺序已随机打乱，开始挑战吧！') feedbackDiv.textContent = '';
         }, 2000);
@@ -482,6 +641,7 @@
         parent.appendChild(placeholderDiv);
     }
 
+    // 正常渲染新闻（无高亮）
     function renderCurrentNews() {
         if (!gameActive && currentIndex >= TOTAL) return;
         const news = shuffledNews[currentIndex];
@@ -489,8 +649,8 @@
 
         newsTitleEl.textContent = news.title;
         newsMetaEl.innerHTML = `<span>📅 ${news.date}</span> <span>📍 ${news.location}</span>`;
+        // 使用 textContent 清空高亮干扰
         newsContentEl.textContent = news.content;
-        // 隐藏真假标签
         newsTypeTag.style.display = 'none';
 
         newsImgContainer.innerHTML = '';
@@ -502,6 +662,29 @@
         img.style.objectFit = 'cover';
         img.onerror = () => handleImageError(img, news.title);
         newsImgContainer.appendChild(img);
+    }
+
+    // 假新闻高亮：在原新闻文本上标记虚假文字并给出理由
+    function highlightFakeNews(news) {
+        if (!news.isReal && news.fakeSpots && news.fakeSpots.length > 0) {
+            let originalText = news.content;
+            let htmlText = originalText;
+            // 对每个虚假片段进行替换（防止重复替换，使用临时标记）
+            for (let spot of news.fakeSpots) {
+                const regex = new RegExp(`(${escapeRegex(spot.text)})`, 'g');
+                const replacement = `<span class="fake-highlight">$1</span><span class="fake-reason">💬 虚假提示：${spot.reason}</span>`;
+                htmlText = htmlText.replace(regex, replacement);
+            }
+            newsContentEl.innerHTML = htmlText;
+        } else {
+            // 真新闻保持纯文本
+            newsContentEl.textContent = news.content;
+        }
+    }
+
+    // 辅助转义正则
+    function escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     function showFeedback(isCorrect, isRealNews) {
@@ -538,7 +721,7 @@
                 <h3>🏁 游戏通关</h3>
                 <div class="final-score">${currentScore} / ${TOTAL}</div>
                 <p>你的新闻辨别力指数：${currentScore === TOTAL ? '🌟 火眼金睛！' : (currentScore >= 7 ? '📰 具备一定分辨能力，继续提升' : '🤔 谨慎阅读，多练习辨伪')}</p>
-                <div class="tips-list">
+                <div class="tips-list-modal">
                     <ul style="list-style-type: none; padding-left: 0;">
                         ${tips.map(t => `<li>${t}</li>`).join('')}
                     </ul>
@@ -560,6 +743,7 @@
         });
     }
 
+    // 处理用户判断
     function handleJudge(guessIsReal) {
         if (!gameActive) {
             feedbackDiv.innerHTML = '⛔ 游戏已经结束，点击“重新挑战”继续吧';
@@ -588,6 +772,17 @@
         waitingForNext = true;
         realBtn.disabled = true;
         fakeBtn.disabled = true;
+
+        // 假新闻：停留2秒并高亮虚假部位；真新闻停留1秒后跳转（无高亮）
+        let delayMs = 1000;  // 真新闻默认
+        if (!isActuallyReal) {
+            delayMs = 2000;
+            // 高亮虚假文字
+            highlightFakeNews(currentNews);
+        } else {
+            // 真新闻确保内容为纯文本
+            newsContentEl.textContent = currentNews.content;
+        }
         
         if (isLast) {
             if (timeoutId) clearTimeout(timeoutId);
@@ -596,14 +791,14 @@
                 realBtn.disabled = true;
                 fakeBtn.disabled = true;
                 endGame();
-            }, 1200);
+            }, delayMs);
             return;
         }
         
         if (timeoutId) clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
             currentIndex++;
-            renderCurrentNews();
+            renderCurrentNews();       // 重新渲染，清空所有高亮
             updateUI();
             waitingForNext = false;
             if (gameActive && currentIndex < TOTAL) {
@@ -612,12 +807,15 @@
             } else if (currentIndex >= TOTAL) {
                 endGame();
             }
+            // 刷新右侧技巧栏
+            updateTipsSidebar();
             setTimeout(() => {
                 if (feedbackDiv.innerHTML !== '') feedbackDiv.innerHTML = '';
             }, 500);
-        }, 1000);
+        }, delayMs);
     }
 
+    // 绑定事件
     realBtn.addEventListener('click', () => handleJudge(true));
     fakeBtn.addEventListener('click', () => handleJudge(false));
     resetBtn.addEventListener('click', () => {
@@ -626,6 +824,7 @@
         resetGameState();
     });
     
+    // 启动游戏
     resetGameState();
 </script>
 </body>
